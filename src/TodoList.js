@@ -1,30 +1,92 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from 'react';
+import { Container, Button, TextField, List, ListItem, ListItemText, ListItemSecondaryAction, IconButton, Dialog, DialogContent, DialogActions } from '@mui/material';
+import { AddCircleOutlineRounded, DeleteOutlineRounded, Edit } from '@mui/icons-material';
 
-const TodoList = () => {
+const App = () => {
   const [todos, setTodos] = useState([]);
+  const [inputValue, setInputValue] = useState("");
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editTodoIndex, setEditTodoIndex] = useState(null);
 
-  useEffect(() => {
-    fetch("/api")
-      .then((response) => response.json())
-      .then((data) => setTodos(data))
-      .catch((error) => console.error("Error fetching todos:", error));
-  }, []);
+  const handleAddTodo = () => {
+    setTodos([...todos, inputValue]);
+    setInputValue("");
+  };
+
+  const handleDeleteTodo = (index) => {
+    const newTodos = todos.filter((_, i) => i !== index);
+    setTodos(newTodos);
+  };
+
+  const handleEditTodo = () => {
+    const newTodos = todos.map((todo, i) =>
+      i === editTodoIndex ? inputValue : todo
+    );
+    setTodos(newTodos);
+    setEditDialogOpen(false);
+  };
 
   return (
-    <div>
-      <h1>Todo List</h1>
-      <ul>
+    <Container maxWidth="sm">
+      <TextField
+        label="New Todo"
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        fullWidth
+      />
+      <Button
+        startIcon={<AddCircleOutlineRounded />}
+        onClick={handleAddTodo}
+        variant="contained"
+        color="primary"
+        fullWidth
+        style={{ marginTop: '20px' }}
+      >
+        Add Todo
+      </Button>
+      <List>
         {todos.map((todo, index) => (
-          <li key={index}>
-            <h3>{todo.title}</h3>
-            <p>{todo.text}</p>
-            <p>Status: {todo.done ? "Done" : "Not Done"}</p>
-            <p>Date: {new Date(todo.pub_date).toLocaleString()}</p>
-          </li>
+          <ListItem key={index}>
+            <ListItemText primary={todo} />
+            <ListItemSecondaryAction>
+              <IconButton
+                edge="end"
+                onClick={() => {
+                  setEditTodoIndex(index);
+                  setInputValue(todo);
+                  setEditDialogOpen(true);
+                }}
+              >
+                <Edit />
+              </IconButton>
+              <IconButton edge="end" color="secondary" onClick={() => handleDeleteTodo(index)}>
+                <DeleteOutlineRounded />
+              </IconButton>
+            </ListItemSecondaryAction>
+          </ListItem>
         ))}
-      </ul>
-    </div>
+      </List>
+
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)}>
+        <DialogContent>
+          <TextField
+            label="Edit Todo"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            fullWidth
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleEditTodo} color="primary">
+            Save
+          </Button>
+          <Button onClick={() => setEditDialogOpen(false)} color="secondary">
+            Cancel
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
   );
 };
 
-export default TodoList;
+export default App;
